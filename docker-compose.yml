@@ -4,6 +4,7 @@ datavolume:
   restart: on-failure:10
   volumes:
     - /opt/nginx/certs:/etc/nginx/certs
+    - /opt/nginx/htpasswd:/etc/nginx/htpasswd
     - /opt/nginx/vhosts:/etc/nginx/vhost.d
     - /opt/nginx/html:/usr/share/nginx/html
 
@@ -26,4 +27,4 @@ letsencrypt:
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock:ro
   volumes_from:
-    - nginx-proxy
+    - datavolume
