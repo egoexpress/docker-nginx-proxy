@@ -27,4 +27,4 @@ letsencrypt:
   volumes:
     - /var/run/docker.sock:/var/run/docker.sock:ro
   volumes_from:
-    - datavolume
+    - nginx-proxy
