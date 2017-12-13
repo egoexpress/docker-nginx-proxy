@@ -19,6 +19,8 @@ nginx-proxy:
     - /var/run/docker.sock:/tmp/docker.sock:ro
   volumes_from:
     - datavolume
+  labels:
+    com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
 
 letsencrypt:
   container_name: letsencrypt
