@@ -8,13 +8,14 @@ services:
       com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
     environment:
       - ENABLE_IPV6=true
-      - SSL_POLICY=Mozilla-Modern
+      - SSL_POLICY=Mozilla-Custom
     volumes:
       - certs:/etc/nginx/certs:ro
       - vhost.d:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
       - ./files/body_size.conf:/etc/nginx/conf.d/body_size.conf:ro
+      - ./files/nginx.tmpl:/app/nginx.tmpl
     networks:
       - frontend
 
