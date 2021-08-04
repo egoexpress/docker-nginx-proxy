@@ -2,7 +2,7 @@ version: '3'
 
 services:
   nginx:
-    image: jwilder/nginx-proxy
+    image: nginxproxy/nginx-proxy
     restart: always
     labels:
       com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
@@ -10,7 +10,7 @@ services:
       - ENABLE_IPV6=true
       - SSL_POLICY=Mozilla-Custom
     volumes:
-      - certs:/etc/nginx/certs:ro
+      - certs:/etc/nginx/certs
       - vhost.d:/etc/nginx/vhost.d
       - html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
@@ -20,15 +20,17 @@ services:
       - frontend
 
   letsencrypt:
-    image: jrcs/letsencrypt-nginx-proxy-companion
+    image: nginxproxy/acme-companion
     restart: always
+    volumes_from:
+      - nginx
     volumes:
-      - certs:/etc/nginx/certs
-      - vhost.d:/etc/nginx/vhost.d
-      - html:/usr/share/nginx/html
       - /var/run/docker.sock:/var/run/docker.sock:ro
+      - acme:/etc/acme.sh
     networks:
       - frontend
+    environment:
+      - NGINX_PROXY_CONTAINER=proxy_nginx_1
     depends_on:
       - nginx
 
@@ -36,6 +38,7 @@ volumes:
   certs:
   vhost.d:
   html:
+  acme:
 
 networks:
   frontend:
