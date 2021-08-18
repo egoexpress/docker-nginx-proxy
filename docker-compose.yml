@@ -18,6 +18,9 @@ services:
       - ./files/nginx.tmpl:/app/nginx.tmpl
     networks:
       - frontend
+    ports:
+      - 80:80
+      - 443:443
 
   letsencrypt:
     image: nginxproxy/acme-companion:2.1
