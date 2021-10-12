@@ -33,7 +33,7 @@ services:
     networks:
       - frontend
     environment:
-      - NGINX_PROXY_CONTAINER=proxy_nginx_1
+      - NGINX_PROXY_CONTAINER=proxy-nginx-1
     depends_on:
       - nginx
 
