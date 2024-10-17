@@ -1,6 +1,5 @@
-version: '3'
-
 services:
+
   nginx:
     image: nginxproxy/nginx-proxy:1.4
     restart: always
@@ -21,6 +20,10 @@ services:
     ports:
       - 80:80
       - 443:443
+    logging:
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   letsencrypt:
     image: nginxproxy/acme-companion:2.2
