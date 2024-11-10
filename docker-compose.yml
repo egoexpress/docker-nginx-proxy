@@ -1,7 +1,7 @@
 services:
 
   nginx:
-    image: nginxproxy/nginx-proxy:1.4
+    image: nginxproxy/nginx-proxy:1.6
     restart: always
     labels:
       com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
@@ -26,7 +26,7 @@ services:
         max-file: "3"
 
   letsencrypt:
-    image: nginxproxy/acme-companion:2.2
+    image: nginxproxy/acme-companion:2.5
     restart: always
     volumes_from:
       - nginx
