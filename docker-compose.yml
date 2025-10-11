@@ -27,7 +27,7 @@ services:
         max-file: "3"
 
   letsencrypt:
-    image: nginxproxy/acme-companion:2.5
+    image: nginxproxy/acme-companion:2.6
     restart: always
     volumes_from:
       - nginx
