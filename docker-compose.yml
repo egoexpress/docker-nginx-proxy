@@ -16,6 +16,7 @@ services:
       - /repos/docker-nginx-proxy/vhost.d:/etc/nginx/vhost.d:ro
       - /repos/docker-nginx-proxy/files/body_size.conf:/etc/nginx/conf.d/body_size.conf:ro
       - /repos/docker-nginx-proxy/files/proxy_header.conf:/etc/nginx/conf.d/proxy_header.conf:ro
+      - /repos/docker-nginx-proxy/files/server_tokens.conf:/etc/nginx/conf.d/server_tokens.conf:ro
       - /repos/docker-nginx-proxy/files/nginx.tmpl:/app/nginx.tmpl
     networks:
       - frontend
