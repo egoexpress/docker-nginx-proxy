@@ -23,4 +23,4 @@ Start or update the proxy with
     docker compose -p proxy pull
     docker compose -p proxy up -d
 
-When the `Dockerfile` changes, the workflow publishes a new tag and its summary warns if `docker-compose.yml` still pins the old one. Once an upstream nginx-proxy release ships nginx 1.31.9 or newer ([PR #2792](https://github.com/nginx-proxy/nginx-proxy/pull/2792)), remove the `Dockerfile`, the workflow and the package, and go back to the upstream image.
+When the `Dockerfile` changes, the workflow publishes a new tag and opens a pull request that bumps the pin in `docker-compose.yml`; merging that pull request is what rolls the new image out. Opening it requires *Allow GitHub Actions to create and approve pull requests* under Settings → Actions → General → Workflow permissions. Once an upstream nginx-proxy release ships nginx 1.31.9 or newer ([PR #2792](https://github.com/nginx-proxy/nginx-proxy/pull/2792)), remove the `Dockerfile`, the workflow and the package, and go back to the upstream image.
