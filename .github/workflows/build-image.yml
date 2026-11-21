@@ -14,8 +14,9 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   packages: write
+  pull-requests: write
 
 concurrency:
   group: build-image-${{ github.ref }}
@@ -65,21 +66,46 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # The tag lives in two places: derived from the Dockerfile here, and
-      # pinned in docker-compose.yml. Surface a mismatch instead of letting the
-      # deployment drift to an older image.
-      - name: Check the compose reference
+      # The tag lives in two places: derived from the Dockerfile above, and
+      # pinned in docker-compose.yml. When they differ, open a pull request
+      # that bumps the pin instead of leaving the deployment on an older image.
+      - name: Pin the published image in docker-compose.yml
         if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -eu
           image="ghcr.io/${GITHUB_REPOSITORY}:${{ steps.tag.outputs.tag }}"
           pinned="$(sed -n 's/^[[:space:]]*image:[[:space:]]*//p' docker-compose.yml | head -n1)"
-          if [ "$pinned" != "$image" ]; then
-            echo "::warning::docker-compose.yml pins '$pinned', but this build published '$image'"
-            {
-              echo "### docker-compose.yml is out of date"
-              echo
-              echo "Published: \`$image\`"
-              echo
-              echo "Pinned: \`$pinned\`"
-            } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$pinned" = "$image" ]; then
+            echo "docker-compose.yml already pins $image"
+            exit 0
+          fi
+
+          OLD="$pinned" NEW="$image" python3 -c '
+          import os, pathlib
+          path = pathlib.Path("docker-compose.yml")
+          old, new = os.environ["OLD"], os.environ["NEW"]
+          text = path.read_text()
+          if old not in text:
+              raise SystemExit("pinned image not found in docker-compose.yml")
+          path.write_text(text.replace(old, new, 1))
+          '
+
+          branch="chore/pin-proxy-image"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add docker-compose.yml
+          git commit -m "chore: pin the proxy image to ${{ steps.tag.outputs.tag }}"
+          git push --force origin "$branch"
+
+          if gh pr list --head "$branch" --state open --json number --jq '.[].number' | grep -q .; then
+            echo "updated the open pull request for $branch"
+          else
+            gh pr create \
+              --base "${{ github.event.repository.default_branch }}" \
+              --head "$branch" \
+              --title "chore: pin the proxy image to ${{ steps.tag.outputs.tag }}" \
+              --body "The workflow published $image. Merge, then run: docker compose -p proxy pull && docker compose -p proxy up -d"
           fi
