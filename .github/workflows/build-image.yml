@@ -13,10 +13,9 @@ on:
       - .github/workflows/build-image.yml
   workflow_dispatch:
 
+# Read-only by default: only the job that pushes the pin gets more.
 permissions:
-  contents: write
-  packages: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: build-image-${{ github.ref }}
@@ -26,6 +25,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
       - name: Check out
         uses: actions/checkout@v7
@@ -66,16 +70,32 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # The tag lives in two places: derived from the Dockerfile above, and
-      # pinned in docker-compose.yml. When they differ, open a pull request
-      # that bumps the pin instead of leaving the deployment on an older image.
+  # The tag lives in two places: derived from the Dockerfile above, and
+  # pinned in docker-compose.yml. When they differ, open a pull request that
+  # bumps the pin instead of leaving the deployment on an older image. This
+  # needs write access, so it lives in its own job rather than handing the
+  # build steps a token that can push.
+  pin:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Check out the default branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
       - name: Pin the published image in docker-compose.yml
-        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.build.outputs.tag }}
         run: |
           set -eu
-          image="ghcr.io/${GITHUB_REPOSITORY}:${{ steps.tag.outputs.tag }}"
+          image="ghcr.io/${GITHUB_REPOSITORY}:${TAG}"
           pinned="$(sed -n 's/^[[:space:]]*image:[[:space:]]*//p' docker-compose.yml | head -n1)"
           if [ "$pinned" = "$image" ]; then
             echo "docker-compose.yml already pins $image"
@@ -97,7 +117,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
           git add docker-compose.yml
-          git commit -m "chore: pin the proxy image to ${{ steps.tag.outputs.tag }}"
+          git commit -m "chore: pin the proxy image to ${TAG}"
           git push --force origin "$branch"
 
           if gh pr list --head "$branch" --state open --json number --jq '.[].number' | grep -q .; then
@@ -106,6 +126,6 @@ jobs:
             gh pr create \
               --base "${{ github.event.repository.default_branch }}" \
               --head "$branch" \
-              --title "chore: pin the proxy image to ${{ steps.tag.outputs.tag }}" \
+              --title "chore: pin the proxy image to ${TAG}" \
               --body "The workflow published $image. Merge, then run: docker compose -p proxy pull && docker compose -p proxy up -d"
           fi
