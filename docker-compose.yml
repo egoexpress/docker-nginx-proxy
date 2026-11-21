@@ -8,6 +8,9 @@ services:
     environment:
       - ENABLE_IPV6=true
       - SSL_POLICY=Mozilla-Custom
+      # The proxy is the edge - no CDN or tunnel sits in front of it - so
+      # client-supplied X-Forwarded-* headers must not be trusted.
+      - TRUST_DOWNSTREAM_PROXY=false
     volumes:
       - certs:/etc/nginx/certs
       - vhost.d:/etc/nginx/vhost.d
