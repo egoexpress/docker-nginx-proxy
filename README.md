@@ -10,7 +10,7 @@ Now you can start your containers providing the environment variables _VIRTUAL_H
 
 ## Patched nginx image
 
-The mounted `nginx.tmpl` enables HTTP/2, while the upstream `nginxproxy/nginx-proxy` image still ships nginx 1.31.6, which is affected by [CVE-2026-123007 and CVE-2026-123633](https://nginx2shell.com), both fixed in nginx 1.31.9. The `Dockerfile` therefore builds the upstream image and swaps in the nginx binary and its dynamic modules from `nginx:1.31.9-trixie`.
+The mounted `nginx.tmpl` enables HTTP/2, while the upstream `nginxproxy/nginx-proxy:1.11.6` image ships nginx 1.31.3 (upstream master builds on 1.31.6), which is affected by [CVE-2026-123007 and CVE-2026-123633](https://nginx2shell.com), both fixed in nginx 1.31.9. The `Dockerfile` therefore builds the upstream image and swaps in the nginx binary and its dynamic modules from `nginx:1.31.9-trixie`.
 
 The image is built by the [Build image](.github/workflows/build-image.yml) workflow and published to the GitHub Container Registry as `ghcr.io/egoexpress/docker-nginx-proxy:1.11.6-nginx1.31.9`, with `latest` published alongside it. The tag is derived from the `Dockerfile` as `<nginx-proxy version>-nginx<nginx version>`. The workflow runs when the `Dockerfile` changes on `master`, and can be started manually from the Actions tab; it needs no secrets and authenticates with the repository's `GITHUB_TOKEN`.
 
