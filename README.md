@@ -24,3 +24,12 @@ Start or update the proxy with
     docker compose -p proxy up -d
 
 When the `Dockerfile` changes, the workflow publishes a new tag and opens a pull request that bumps the pin in `docker-compose.yml`; merging that pull request is what rolls the new image out. Opening it requires *Allow GitHub Actions to create and approve pull requests* under Settings → Actions → General → Workflow permissions. Once an upstream nginx-proxy release ships nginx 1.31.9 or newer ([PR #2792](https://github.com/nginx-proxy/nginx-proxy/pull/2792)), remove the `Dockerfile`, the workflow and the package, and go back to the upstream image.
+
+## Local template changes
+
+`files/nginx.tmpl` is the upstream nginx-proxy 1.11.6 template plus two local edits. Both carry a comment naming them and must be re-applied whenever the template is updated from upstream:
+
+- the `Mozilla-Custom` SSL policy block, because `docker-compose.yml` pins `SSL_POLICY=Mozilla-Custom` and upstream has no policy by that name;
+- the `ENABLE_HTTP2` guard around `http2 on;` in the fallback server, so the switch also covers the default server that unmatched names reach. This mirrors upstream [PR #2793](https://github.com/nginx-proxy/nginx-proxy/pull/2793) and the guard can be dropped once that is released.
+
+After copying a new upstream template, diff it against this one to see which local edits are missing.

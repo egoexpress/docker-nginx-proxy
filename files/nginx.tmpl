@@ -899,7 +899,17 @@ server {
     server_name _; # This is just an invalid value which will never trigger on a real hostname.
     server_tokens off;
     {{ template "access_log" (dict "Enable" $globals.config.enable_access_log) }}
+    {{- /*
+         * Local patch, not part of upstream nginx-proxy 1.11.6: the fallback
+         * server must follow ENABLE_HTTP2 too. Otherwise setting it to false
+         * disables HTTP/2 on the vhosts while the default server, which any
+         * unmatched SNI reaches, keeps negotiating h2 - exactly the surface
+         * an http2 vulnerability is reached through. Upstream PR #2793; drop
+         * this guard once that is released.
+         */}}
+    {{- if parseBool $globals.config.enable_http2 }}
     http2 on;
+    {{- end }}
         {{- if $fallback_http }}
     listen {{ $globals.config.external_http_port }} {{- $proxy_protocol }}; {{- /* Do not add `default_server` (see comment above). */}}
                 {{- if $globals.config.enable_ipv6 }}
