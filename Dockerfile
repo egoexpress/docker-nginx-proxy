@@ -9,7 +9,7 @@
 # `-trixie` variant is used deliberately: binary and modules must come from the
 # same build as their shared libraries, so the Debian suite must match the one
 # used by nginxproxy/nginx-proxy:1.11.6.
-FROM nginx:1.31.9-trixie AS nginx
+FROM nginx:1.31.10-trixie AS nginx
 
 # Record the version this stage ships, so the final stage can prove it received
 # that binary. Bumping the base image above keeps the check in sync by itself.
