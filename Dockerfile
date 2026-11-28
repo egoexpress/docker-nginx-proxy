@@ -15,7 +15,7 @@ FROM nginx:1.31.10-trixie AS nginx
 # that binary. Bumping the base image above keeps the check in sync by itself.
 RUN nginx -v 2>&1 | sed 's|.*nginx/||' > /tmp/nginx-version
 
-FROM nginxproxy/nginx-proxy:1.11.6
+FROM nginxproxy/nginx-proxy:1.11.8
 
 COPY --from=nginx /usr/sbin/nginx /usr/sbin/nginx
 COPY --from=nginx /usr/lib/nginx/modules/ /usr/lib/nginx/modules/
